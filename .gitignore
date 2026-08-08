@@ -1,0 +1,6 @@
+venv/
+__pycache__/
+*.pyc
+.env
+data/*.ogg
+validation_results.json
