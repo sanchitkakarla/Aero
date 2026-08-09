@@ -1,49 +1,3 @@
-ChatGPT Plus
-
-
-
-
-
-Pasted text(20260809-183848).txt
-Document
-remove evethiong  like - and -
-
-Done. I removed the dash separators (including em dashes — and spaced - separators) from the text.
-
-You can download the cleaned file here:
-
-Pasted_text_no_dashes.txt 
-
-
-If you meant remove every single hyphen (including those inside words like text-emotion, call-center, 3-second, etc.), let me know and I can generate that version too.
-
-
-Pasted_text_no_dashes.txt
-Document
-
-
-
-Pasted text(20260809-183933).txt
-Document
- follow this 
-
-Done. I followed the formatting of the second file and removed the dash separators (including em dashes — used as separators) while leaving the rest of the content intact.
-
-You can download the updated version here:
-
-Pasted_text_followed.txt 
-
-
-If you instead meant remove every hyphen everywhere (including inside words like text-emotion, call-center, 3-second, CPU-only, etc.), let me know and I'll generate that version.
-
-
-Pasted_text_followed.txt
-Document
-
-
-Pasted_text_followed.txt
-
-
 # How I built this
 
 This is the story of how I got from "here are 3 phone calls and a label file" to a working dashboard. I'm writing it the way I'd actually explain it to a teammate, including the stuff that didn't work, because that's usually more useful than a clean writeup that pretends everything went right the first time.
@@ -133,4 +87,4 @@ First real request against the freshly deployed Space was slow a minute or two b
 - Every threshold I tuned (noise cutoffs, silence duration, overlap sensitivity) was tuned against three examples. That's enough to catch obviously broken logic, which it did, more than once, but it's not enough to trust the exact numbers blindly in production.
 - Whisper occasionally garbles transcripts on quiet or non-English audio saw this directly on one of the three calls, which is partly in Spanish. That's an annoying correlation: the calls where audio quality is already rough are exactly the ones most likely to also break transcription, compounding the problem right when you need it to work most.
 
-None of that is meant as a disclaimer to cover myself it's genuinely where I'd point someone with more time and more labeled data to look first.
+None of that is meant as a di
