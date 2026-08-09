@@ -1,15 +1,22 @@
 """Orchestrator: combines the acoustic feature module with the text-based
 emotion model to produce one JSON object per clip in AutoAce's required
 schema. Emotion comes from emotion_text (better accuracy on the 3 labeled
-calls); emotion_acoustic runs alongside for comparison/fallback and gets
-folded in as a secondary signal on confidence, not swapped in as primary.
+calls).
+
+emotion_acoustic (wav2vec2 SER) is off by default -- it measured 0/3 on
+the labeled calls, only ever nudged the confidence score (never overrode
+the primary tone/intensity label), and costs a full extra model's worth
+of memory to keep resident. Set LOAD_ACOUSTIC_EMOTION=1 to bring it back
+for comparison/experimentation; the production path doesn't need it.
 """
+import os
 import time
 
 import features
 import emotion_text
-import emotion_acoustic
 import overlap
+
+LOAD_ACOUSTIC_EMOTION = os.getenv("LOAD_ACOUSTIC_EMOTION", "0") == "1"
 
 
 def process(path):
@@ -24,15 +31,16 @@ def process(path):
         # tell us whether two people were actually talking over each other
         speaker_overlap, _ = overlap.detect(path)
 
-    try:
-        acoustic_emotion = emotion_acoustic.classify(path)
-    except Exception:
-        acoustic_emotion = None
-
     confidence = text_emotion["confidence"]
-    if acoustic_emotion and acoustic_emotion["emotional_tone"] == text_emotion["emotional_tone"]:
-        # two independent signals agreeing is worth boosting confidence for
-        confidence = min(1.0, confidence + 0.1)
+    if LOAD_ACOUSTIC_EMOTION:
+        import emotion_acoustic
+        try:
+            acoustic_emotion = emotion_acoustic.classify(path)
+        except Exception:
+            acoustic_emotion = None
+        if acoustic_emotion and acoustic_emotion["emotional_tone"] == text_emotion["emotional_tone"]:
+            # two independent signals agreeing is worth boosting confidence for
+            confidence = min(1.0, confidence + 0.1)
 
     result = {
         "emotional_tone": text_emotion["emotional_tone"],

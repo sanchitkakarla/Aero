@@ -23,7 +23,9 @@ Everything that's physically measurable directly from the waveform is handled wi
 
 **Approach B — transcript sentiment** (`emotion_text.py`): local Whisper (`base`) transcribes the call, then `j-hartmann/emotion-english-distilroberta-base` classifies the transcript text (Ekman-style 7-class output, mapped onto the 5-class schema).
 
-**Result on the 3 labeled calls**: Approach A got 0/3 correct — it defaulted to "angry" on every call, including the ones labeled `neutral` and `satisfied`. It's picking up call-center vocal energy/pace as anger, which is exactly the failure mode the spec warns against ("do not infer frustration or distress solely from loudness"). Approach B got 2/3 correct and was adopted as the primary signal, with Approach A's output folded in only as a confidence booster (if both models agree, confidence goes up; it never overrides the text model's label).
+**Result on the 3 labeled calls**: Approach A got 0/3 correct — it defaulted to "angry" on every call, including the ones labeled `neutral` and `satisfied`. It's picking up call-center vocal energy/pace as anger, which is exactly the failure mode the spec warns against ("do not infer frustration or distress solely from loudness"). Approach B got 2/3 correct and was adopted as the primary signal.
+
+Approach A originally ran alongside Approach B in production, folded in only as a confidence booster (if both models agreed, confidence went up; it never overrode the text model's label). It's now **off by default** (`LOAD_ACOUSTIC_EMOTION=1` to re-enable) — since it never influenced the actual `emotional_tone`/`emotional_intensity` output and measured 0/3 standalone, keeping a whole extra model resident in memory for a minor confidence-calibration nudge wasn't worth the cost once memory became a real constraint on the hosting side. Validated that removing it doesn't change any field's accuracy on the labeled set.
 
 **Approach C — valence/arousal ensemble** (prototyped, not included in the final repo): projects both models' class probabilities onto a shared valence/arousal space and averages, on the theory that blending would smooth out each model's individual blind spots (acoustic misses calm-but-negative calls, text misses angry-but-plain-worded calls). Tested against the same 3 calls: it *did* fix the one text-only miss (call_001, garbled transcript, correctly identified as negative-high-arousal via the acoustic signal) but broke a call the text model had gotten right (call_002) and left emotional_intensity accuracy at 0/3 (down from 3/3 for text-only). Net effect was negative on this sample. Documenting this as evidence of process, not as a recommendation — the honest read is that 3 examples are nowhere near enough to fit a 2-parameter blend without just chasing noise. Not carried into the shipped pipeline since it isn't wired into `pipeline.py` and doesn't outperform the primary approach; the idea (and what it would take to validate it properly) is captured here for future work.
 
@@ -41,7 +43,7 @@ call_001.ogg
      ├─► features.py        (acoustic: noise, silence, quality, needs_diarization flag)
      ├─► overlap.py          (pyannote diarization, only if channels are duplicated mono)
      ├─► emotion_text.py     (Whisper transcript → j-hartmann text-emotion classifier)
-     └─► emotion_acoustic.py (wav2vec2-superb-er, used only for confidence agreement check)
+     └─► emotion_acoustic.py (wav2vec2-superb-er, off by default -- see below)
                 │
                 ▼
           pipeline.py (orchestrator — merges all of the above into the required JSON schema)
