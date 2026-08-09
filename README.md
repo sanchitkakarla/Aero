@@ -1,11 +1,6 @@
----
+
 title: AutoAce Voice Tone Dashboard
-colorFrom: blue
-colorTo: indigo
-sdk: docker
-app_port: 7860
-pinned: false
----
+
 
 # AutoAce Voice Tone & Background Noise Dashboard
 
