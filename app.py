@@ -17,6 +17,16 @@ import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 
+load_dotenv()
+
+# Streamlit Cloud has no .env file -- secrets come from st.secrets instead.
+# Mirror them into os.environ so pipeline.py/overlap.py (which just call
+# os.getenv) don't need to know which environment they're running in.
+if hasattr(st, "secrets"):
+    for key in ("HF_TOKEN", "APP_USER", "APP_PASS"):
+        if key in st.secrets and not os.getenv(key):
+            os.environ[key] = st.secrets[key]
+
 import pipeline
 
 
@@ -29,8 +39,6 @@ class NpEncoder(json.JSONEncoder):
         if isinstance(obj, np.floating):
             return float(obj)
         return super().default(obj)
-
-load_dotenv()
 
 st.set_page_config(page_title="AutoAce Voice Tone Dashboard", layout="wide")
 
