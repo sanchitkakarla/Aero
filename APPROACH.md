@@ -87,4 +87,4 @@ First real request against the freshly deployed Space was slow a minute or two b
 - Every threshold I tuned (noise cutoffs, silence duration, overlap sensitivity) was tuned against three examples. That's enough to catch obviously broken logic, which it did, more than once, but it's not enough to trust the exact numbers blindly in production.
 - Whisper occasionally garbles transcripts on quiet or non-English audio saw this directly on one of the three calls, which is partly in Spanish. That's an annoying correlation: the calls where audio quality is already rough are exactly the ones most likely to also break transcription, compounding the problem right when you need it to work most.
 
-None of that is meant as a di
+None of that is meant as a disclaimer to cover myself it's genuinely where I'd point someone with more time and more labeled data to look first.
