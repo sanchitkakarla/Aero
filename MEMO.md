@@ -1,5 +1,9 @@
 # AutoAce Voice Tone & Background Noise Trial — Technical Memo
 
+**Hosted dashboard**: https://sanchitk8-autoace-voice-tone.hf.space
+**Login**: `autoace_reviewer` / `bwrTZfhLcYd3qpTr`
+**Code**: https://github.com/sanchitkakarla/Aero (private — access on request)
+
 ## 1. Objective recap
 
 Classify emotional tone and background-noise/audio-quality characteristics for production call audio, matching the schema in the trial spec, staying under $0.003/audio-minute, and shipping a hosted dashboard for batch evaluation.
@@ -49,7 +53,7 @@ call_001.ogg
           pipeline.py (orchestrator — merges all of the above into the required JSON schema)
                 │
                 ▼
-          app.py (Streamlit dashboard — login, ZIP+CSV batch upload, progress, CSV/JSON download)
+          app.py (Streamlit dashboard, hosted as a Docker Space on Hugging Face — login, ZIP+CSV batch upload, progress, CSV/JSON download)
 ```
 
 Every module is independently runnable and testable from the CLI (`python features.py call.ogg`, etc.) — this was a deliberate choice so any one piece (e.g. swapping the SER model, or adding a real audio-event-tagging model for `background_noise_type`) can be replaced without touching the rest of the pipeline.
@@ -90,6 +94,8 @@ All inference is local (CPU, no GPU used or required) — no per-call API billin
 - Assuming a modest cloud CPU instance (e.g., ~4 vCPU, ~$0.10–0.15/hr — roughly an AWS `c6i.xlarge`-class box), 32 seconds of compute costs **~$0.0009–0.0013 per audio-minute** — comfortably under the $0.003 ceiling, with room to spare for concurrent batch throughput or a safety margin on slower instance types.
 - This estimate is single-threaded and unoptimized. Production would batch multiple files concurrently (the models are already loaded once and reused across a whole batch in `pipeline.py`/`app.py`, so per-file marginal cost drops further once amortized past the first file) and could quantize models (int8) for another 2-4x speedup if needed.
 - No external paid API is used, so there's no per-request billing, rate limits, or data-retention disclosure required under the trial's external-API clause.
+
+**Hosting cost, separate from the per-minute inference estimate above**: the dashboard is deployed on Hugging Face Spaces (Docker, `cpu-basic` hardware) under a Pro subscription, $9/month flat. That's not part of the $0.003/audio-minute ceiling — it's the cost of having the app *sitting there and reachable* at all, independent of how much audio actually gets processed through it. Went with a paid tier after Streamlit Cloud's free tier (the original plan) couldn't reliably hold this pipeline's four models in memory at once — see `APPROACH.md` for the full account of that debugging process. Worth noting this as a real operational cost AutoAce would want in the loop even though it's outside the per-minute compute estimate the ceiling is scoped to.
 
 ## 6. Latency analysis
 
