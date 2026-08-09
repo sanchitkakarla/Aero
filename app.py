@@ -20,12 +20,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Streamlit Cloud has no .env file -- secrets come from st.secrets instead.
-# Mirror them into os.environ so pipeline.py/overlap.py (which just call
-# os.getenv) don't need to know which environment they're running in.
-if hasattr(st, "secrets"):
+# HF Spaces (Docker) injects secrets straight into os.environ, so this is a
+# no-op there. Mirror whichever is present into os.environ so pipeline.py/
+# overlap.py (which just call os.getenv) don't need to know which
+# environment they're running in.
+try:
     for key in ("HF_TOKEN", "APP_USER", "APP_PASS"):
         if key in st.secrets and not os.getenv(key):
             os.environ[key] = st.secrets[key]
+except Exception:
+    pass
 
 import pipeline
 
