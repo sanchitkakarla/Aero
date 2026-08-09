@@ -1,6 +1,5 @@
 ---
 title: AutoAce Voice Tone Dashboard
-emoji: 📞
 colorFrom: blue
 colorTo: indigo
 sdk: docker
